@@ -78,7 +78,11 @@
         <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <Debugger_HostApplication>D:\Down\Tester\MGStorageTester.exe</Debugger_HostApplication>
+        <VerInfo_Release>1</VerInfo_Release>
+        <Manifest_File>None</Manifest_File>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.1.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <Debugger_HostApplication>D:\Users\Mario\Documents\RAD Studio\Projects\WGAzCopy\WGAzCopy.exe</Debugger_HostApplication>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
@@ -88,7 +92,11 @@
         <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_Keys>CompanyName=Mario Giannini;FileDescription=;FileVersion=1.0.0.0;InternalName=MGStorage;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=MGStorage;ProductVersion=1.0.0.0;Comments=www.mariogiannini.com</VerInfo_Keys>
+        <VerInfo_Build>8</VerInfo_Build>
+        <VerInfo_Release>1</VerInfo_Release>
+        <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
+        <Debugger_HostApplication>S:\G\Misc Programs (All Source)\WGBookImportUtility\WGBookImportUtility.exe</Debugger_HostApplication>
+        <VerInfo_Keys>CompanyName=Mario Giannini;FileDescription=Cloud Storage COM Interface from www.mariogiannini.com;FileVersion=1.0.1.8;InternalName=MGStorage;LegalCopyright=Copyright Mario Giannini;LegalTrademarks=;OriginalFilename=;ProductName=MGStorage;ProductVersion=1.0.1;Comments=www.mariogiannini.com</VerInfo_Keys>
         <Manifest_File>None</Manifest_File>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
     </PropertyGroup>
@@ -129,10 +137,6 @@
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k230.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp230.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Program Files (x86)\FastReports\LibD23\dclfrx23.bpl">FastReport 5.0 Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Program Files (x86)\FastReports\LibD23\dclfrxDB23.bpl">FastReport 5.0 DB Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Program Files (x86)\FastReports\LibD23\dclfrxe23.bpl">FastReport 5.0 Exports</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Program Files (x86)\FastReports\LibD23\dclfrxtee23.bpl">(untitled)</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="2">

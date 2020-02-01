@@ -7,16 +7,26 @@
     <Transaction>2017/11/07 15:12:59.000.970,=D:\Users\Mario\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
     <Transaction>2017/12/26 11:47:07.000.771,=D:\Users\Mario\Documents\Embarcadero\Studio\Projects\Project1_TLB.pas</Transaction>
     <Transaction>2017/12/26 11:47:07.000.764,=D:\Users\Mario\Documents\Embarcadero\Studio\Projects\Project1.ridl</Transaction>
-    <Transaction>2017/12/26 11:47:59.000.570,D:\Users\Mario\Documents\Embarcadero\Studio\Projects\Project1_TLB.pas=D:\Down\MGStorage\Project1_TLB.pas</Transaction>
-    <Transaction>2017/12/26 11:47:59.000.575,D:\Down\MGStorage\Project1_TLB.pas=D:\Down\MGStorage\MGStorage_TLB.pas</Transaction>
-    <Transaction>2017/12/26 11:47:59.000.546,D:\Users\Mario\Documents\Embarcadero\Studio\Projects\Project1.ridl=D:\Down\MGStorage\MGStorage.ridl</Transaction>
-    <Transaction>2017/12/26 11:48:09.000.316,D:\Users\Mario\Documents\Embarcadero\Studio\Projects\Project1.dproj=D:\Down\MGStorage\MGStorage.dproj</Transaction>
-    <Transaction>2017/12/26 11:48:51.000.741,=D:\Down\MGStorage\uMGStorageAmazon.pas</Transaction>
+    <Transaction>2017/12/26 11:47:59.000.570,D:\Down\MGStorage\Project1_TLB.pas=D:\Users\Mario\Documents\Embarcadero\Studio\Projects\Project1_TLB.pas</Transaction>
+    <Transaction>2017/12/26 11:47:59.000.546,D:\Down\MGStorage\MGStorage.ridl=D:\Users\Mario\Documents\Embarcadero\Studio\Projects\Project1.ridl</Transaction>
+    <Transaction>2017/12/26 11:47:59.000.575,D:\Down\MGStorage\MGStorage_TLB.pas=D:\Down\MGStorage\Project1_TLB.pas</Transaction>
+    <Transaction>2017/12/26 11:48:09.000.316,D:\Down\MGStorage\MGStorage.dproj=D:\Users\Mario\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
     <Transaction>2017/12/26 11:48:51.000.780,=D:\Down\MGStorage\uMGStorageFile.pas</Transaction>
-    <Transaction>2017/12/26 11:48:51.000.721,=D:\Down\MGStorage\uMGStorage.pas</Transaction>
-    <Transaction>2017/12/26 11:48:51.000.759,=D:\Down\MGStorage\uMGStorageAzure.pas</Transaction>
     <Transaction>2017/12/26 11:48:51.000.800,=D:\Down\MGStorage\uMGStorageFTP.pas</Transaction>
+    <Transaction>2017/12/26 11:48:51.000.759,=D:\Down\MGStorage\uMGStorageAzure.pas</Transaction>
+    <Transaction>2017/12/26 11:48:51.000.721,=D:\Down\MGStorage\uMGStorage.pas</Transaction>
+    <Transaction>2017/12/26 11:48:51.000.741,=D:\Down\MGStorage\uMGStorageAmazon.pas</Transaction>
     <Transaction>2017/12/26 11:51:39.000.399,=D:\Down\MGStorage\Unit1.pas</Transaction>
-    <Transaction>2017/12/26 11:52:11.000.889,D:\Down\MGStorage\Unit1.pas=D:\Down\MGStorage\uConnection.pas</Transaction>
+    <Transaction>2017/12/26 11:52:11.000.889,D:\Down\MGStorage\uConnection.pas=D:\Down\MGStorage\Unit1.pas</Transaction>
   </Transactions>
+	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="MGStorage.ridl"/>
+    <File Path="MGStorage_TLB.pas"/>
+    <File Path="uConnection.pas"/>
+    <File Path="uMGStorage.pas"/>
+    <File Path="uMGStorageAmazon.pas"/>
+    <File Path="uMGStorageAzure.pas"/>
+    <File Path="uMGStorageFile.pas"/>
+    <File Path="uMGStorageFTP.pas"/>
+  </ProjectSortOrder>
 </BorlandProject>

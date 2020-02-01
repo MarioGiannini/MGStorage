@@ -6,7 +6,7 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Masks,
   System.Generics.Collections,
   Data.Cloud.CloudAPI, Data.Cloud.AzureAPI, Vcl.StdCtrls, System.StrUtils,
-  HTTPApp, System.Types, System.IOUtils, uMGStorage;
+  HTTPApp, System.Types, System.IOUtils, NetEncoding, uMGStorage;
 
   type
   TMGAzureConnection = class(TMGStorageService)
@@ -106,6 +106,7 @@ end;
 constructor TMGAzureConnection.Create(ConnectionString: String);
 begin
   fConnAzure := TAzureConnectionInfo.Create( nil );
+  fConnAzure.Protocol := 'https';
   inherited;
   fSupportsContainers := true;
 end;
@@ -120,7 +121,7 @@ end;
 procedure TMGAzureConnection.DeleteFile(Storagefilename: String);
 begin
   AssertConnected;
-  if( self.FileExists( StorageFilename ) ) then
+//  if( self.FileExists( StorageFilename ) ) then
   begin
     if Not fBlobService.DeleteBlob( fContainerName, EFP('',Storagefilename, false, false ) ) then
       RaiseDeleteFileError( StorageFilename );
@@ -179,8 +180,13 @@ var
   SL: TStrings;
 begin
   AssertConnected;
+  // MG 2020-01-29: Previous version called GetBlobProperties, which seemed to download entire file. Also releasing SL now
   SL := nil;
-  Result := fBlobService.GetBlobProperties(fContainerName, EFP( '', StorageFilename, false, false), SL, '', '', nil );
+  try
+    Result := fBlobService.GetBlobMetaData(fContainerName, EFP( '', StorageFilename, false, false), SL, '', '', nil );
+  finally
+    FreeAndNil( SL );
+  end;
 end;
 
 function TMGAzureConnection.GetContainerList: integer;
@@ -211,6 +217,7 @@ var
 begin
   AssertConnected;
   try
+    ForceDirectories( ExtractFilePath( DestLocalFilename ) );
     Stream := TFileStream.Create( DestLocalFilename, fmCreate or fmOpenWrite );
     if Not fBlobService.GetBlob( fContainerName, EFP( '', Storagefilename, false, false ), Stream ) then
       RaiseGetFileError( Storagefilename, DestLocalFilename );
@@ -311,18 +318,59 @@ begin
   fCaseSensitive := (fProperties.Values['CaseSensitive']='') or SameText(fProperties.Values['CaseSensitive'],'yes');
 end;
 
+// MG 2020-01-29: Previous version used PutBlockBlob which would cause errors on large files.
 procedure TMGAzureConnection.PutFile(Localfilename,
   DestStorageFilename: String);
 var
   Ar: TArray<Byte>;
+  SrcStream: TFileStream;
+  Buffer: TBytes;
+  BlockNum, LastSize, ThisRead: integer;
+  BlockNumStr, BlobName, BlockID: String;
+
+  BlockList: TList<TAzureBlockListItem>;
+  Base64: TBase64Encoding;
+const
+  BUFSIZE = 1048576;
 begin
   AssertConnected;
+
+  LastSize := -1;
+  BlockNum := 0;
+  SrcStream := nil;
+  BlockList := nil;
+  Base64 := TBase64Encoding.Create;
+
   try
-    FileToArray( LocalFilename, Ar );
-    if Not fBlobService.PutBlockBlob( fContainerName, EFP( '', DestStorageFilename, false, false ), Ar ) then
-      RaisePutFileError( DestStorageFilename );
+    BlockList := TList<TAzureBlockListItem>.Create;
+    SrcStream := TFileStream.Create( LocalFilename, fmOpenRead or fmShareDenyNone );
+    SetLength( Buffer, BUFSIZE );
+    BlobName := EFP( '', DestStorageFilename, false, false );
+
+    repeat
+      ThisRead := SrcStream.Read( Buffer, BUFSIZE );
+      if( ThisRead > 0 ) then
+      begin
+        if( LastSize <> ThisRead ) then
+        begin
+          SetLength( Ar, ThisRead );
+          LastSize := ThisRead;
+        end;
+        Move( Ar[0], Buffer[0], ThisRead );
+        BlockNumStr := Format('%.9d', [BlockNum] );
+        BlockId := Base64.Encode( BlockNumStr );
+        If Not fBlobService.PutBlock( fContainerName, BlobName, BlockId, Ar ) then
+          RaisePutFileError( DestStorageFilename );
+        BlockList.Add( TAzureBlockListItem.Create( BlockID, abtUncommitted ) );
+        Inc( BlockNum );
+      end;
+    until ThisRead = 0;
+    if fBlobService.PutBlockList(fContainerName, BlobName, BlockList) = false then
+          RaisePutFileError( DestStorageFilename );
   finally
-    SetLength( Ar, 0 );
+    FreeAndNil( Base64 );
+    FreeAndNil( BlockList );
+    FreeAndNil( SrcStream );
   end;
 
 end;
