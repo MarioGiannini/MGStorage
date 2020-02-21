@@ -196,7 +196,11 @@ begin
   Result := TStringList.Create;
   Result.CaseSensitive := false;
   Result.Duplicates := TDuplicates.dupIgnore;
+{$IF CompilerVersion = 23.0}
   Result.Values['host'] := GetConnectionInfo.VirtualHost(BucketName);
+{$IFELSE}
+  Result.Values['host'] := GetConnectionInfo.StorageVirtualHost(BucketName);
+{$IFEND}
   Result.Values['x-amz-content-sha256'] := 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'; //empty string
   Result.Values['x-amz-date'] := ISODateTime_noSeparators;
 end;

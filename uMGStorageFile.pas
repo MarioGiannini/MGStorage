@@ -9,7 +9,7 @@ uses
   type
 
   TMGFileConnection = class(TMGStorageService)
-      fBaseFolder: String; // Always ends in '/'
+      fNetResource, fUsername, fPassword, fBaseFolder: String; // Always ends in '/'
       fTinyFiles: Boolean;
   private
   protected
@@ -17,6 +17,9 @@ uses
     function WP( S: String ) : String; // Windows Path (uses '\' seperator)
     function MyEFP( Base, Path: String; Delimit: Boolean = false ) : String; // Evaluate Full path
     function GetFileListEx( Path, Mask: String; IncSubfolders: Boolean  ): integer;
+    function ConnectIfNeeded: boolean;
+    procedure DisConnectIfNeeded;
+
 
   public
     constructor Create( ConnectionString: String );
@@ -48,9 +51,71 @@ end;
 
 procedure TMGFileConnection.Connect;
 begin
+  if ConnectIfNeeded = false then
+    RaiseError( 'Error connecting');
+
   if( fBaseFolder = '' ) or ( Not DirectoryExists(  fBaseFolder ) ) then
     RaiseError( 'Folder does not exist');
   fConnected := true;
+end;
+
+function TMGFileConnection.ConnectIfNeeded: Boolean;
+var
+   NetResource: TNetResource;
+   P: integer;
+   LastErr: Cardinal;
+   LastErrStr: String;
+   ConnRes: Cardinal;
+
+begin
+   Result := true;
+   P := Pos( '//', fBaseFolder );
+   if( P < 1 ) then
+      exit;
+   if( P = 1 ) then
+   begin
+      fNetResource := StringReplace( fBaseFolder, '/', '\', [rfReplaceAll] );
+      P := Pos( '\', fNetResource, 3 );
+      if P > 1 then
+         fNetResource := Copy( fNetResource, 1, p-1 )
+      else
+         fNetResource := '';
+   end;
+
+
+   try
+      if( fNetResource <> '') then
+      begin
+         ZeroMemory(@NetResource, sizeof(TNetResource));
+         with NetResource do begin
+           dwType      :=  RESOURCETYPE_ANY;
+           lpLocalName  :=  nil;
+           lpProvider  :=  nil;
+           lpRemoteName :=  PChar( fNetResource );
+         end;
+         ConnRes := WNetAddConnection2(NetResource, pchar(fPassword), pchar(fUsername), 0);
+
+         if ConnRes = ERROR_SESSION_CREDENTIAL_CONFLICT  then
+         begin
+            WNetCancelConnection2(PChar( fNetResource ), 0, false);
+            ConnRes := WNetAddConnection2(NetResource, pchar(fPassword), pchar(fUsername), 0);
+         end;
+
+         if( ConnRes <> NO_ERROR ) then
+         begin
+            LastErr := GetLastError;
+            LastErrStr :=SysErrorMessage( LastErr );
+            Result := false;
+         end
+         else
+            fConnected := true;
+      end;
+   except on E:Exception do
+      begin
+         fError := 'Error: ' + E.Message;
+         Result := false;
+      end;
+   end;
 end;
 
 procedure TMGFileConnection.CopyFile(StorageFilenameOld,
@@ -68,9 +133,12 @@ end;
 constructor TMGFileConnection.Create( ConnectionString: String);
 begin
   inherited;
+  fConnected := false;
   fBaseFolder :='';
   fTinyFiles := false;
   fServer := '';
+  fUsername := '';
+  fPassword := '';
   SetConnectionString( ConnectionString );
 end;
 
@@ -134,6 +202,16 @@ end;
 destructor TMGFileConnection.Destroy;
 begin
   inherited;
+  DisconnectIfNeeded;
+end;
+
+procedure TMGFileConnection.DisConnectIfNeeded;
+begin
+   if( fConnected ) then
+   begin
+      WNetCancelConnection2(PChar( fNetResource ), 0, false);
+      fConnected := false;
+   end;
 end;
 
 procedure TMGFileConnection.GetFile(Storagefilename,
@@ -160,7 +238,7 @@ function TMGFileConnection.GetFileList(Path, Mask: String; IncSubfolders: Boolea
 begin
   AssertConnected;
   fItemList.Clear;
-  GetFileListEx( EFP( fBaseFolder, Path, true ), Mask, IncSubFolders );
+  GetFileListEx( MyEFP( fBaseFolder, Path, true ), Mask, IncSubFolders );
   fItemList.Sort;
   Result := fItemList.Count;
 end;
@@ -174,7 +252,7 @@ begin
   try
     if FindFirst(Path+'*', faAnyFile, Srch) = 0 then
     begin
-      RelPath := '/' + StringReplace( Path, fBaseFolder, '', [rfIgnoreCase] );
+      RelPath := '/' + StringReplace( StringReplace( Path, '\', '/', [rfReplaceAll]), fBaseFolder, '', [rfIgnoreCase] );
       repeat
         if (Srch.Attr and faDirectory) = faDirectory then
         begin
@@ -204,12 +282,22 @@ begin
 end;
 
 function TMGFileConnection.MyEFP(Base, Path: String; Delimit: Boolean): String;
+var
+   Pre: String;
 begin
-  Result := StringReplace( EFP( Base, Path, Delimit, false ), '/', '\', [rfReplaceAll] );
+   if( Pos( '//', Base ) > 0 ) then
+      Pre := '\\'
+   else
+      Pre := '';
+
+   Result := Pre + StringReplace( EFP( Base, Path, Delimit, false ), '/', '\', [rfReplaceAll] );
 end;
 
 procedure TMGFileConnection.PropertiesChanged;
 begin
+  fUsername := fProperties.Values['Username'];
+  fPassword := fProperties.Values['Password'];
+
   fBaseFolder := IncludeTrailingPathDelimiter( fProperties.Values['Basefolder'] );
   if( fBaseFolder = '' ) then
     fBaseFolder := ExtractFilePath( Application.ExeName );

@@ -356,7 +356,7 @@ begin
           SetLength( Ar, ThisRead );
           LastSize := ThisRead;
         end;
-        Move( Ar[0], Buffer[0], ThisRead );
+        Move( Buffer[0], Ar[0], ThisRead );   // OMG, I switched the order?!?!?
         BlockNumStr := Format('%.9d', [BlockNum] );
         BlockId := Base64.Encode( BlockNumStr );
         If Not fBlobService.PutBlock( fContainerName, BlobName, BlockId, Ar ) then
