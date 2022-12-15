@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Masks, Vcl.Forms,
   Data.Cloud.CloudAPI, Data.Cloud.AmazonAPI, Vcl.StdCtrls, System.StrUtils,
-  HTTPApp, System.Types, System.IOUtils, uMGStorage;
+  System.Generics.Collections, HTTPApp, System.Types, System.IOUtils, uMGStorage;
 
   type
 
@@ -196,11 +196,12 @@ begin
   Result := TStringList.Create;
   Result.CaseSensitive := false;
   Result.Duplicates := TDuplicates.dupIgnore;
-{$IF CompilerVersion = 23.0}
+{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4)
   Result.Values['host'] := GetConnectionInfo.VirtualHost(BucketName);
-{$IFELSE}
+{$else}
   Result.Values['host'] := GetConnectionInfo.StorageVirtualHost(BucketName);
 {$IFEND}
+
   Result.Values['x-amz-content-sha256'] := 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'; //empty string
   Result.Values['x-amz-date'] := ISODateTime_noSeparators;
 end;
@@ -417,7 +418,7 @@ function TMGAmazonConnection.FileExists( StorageFilename: String): boolean;
 var
   SL: TStrings;
 begin
-  SL := fStorageService.GetObjectMetadata( fContainerName, EFP( '', StorageFilename ) );
+  SL := fStorageService.GetObjectMetadata( fContainerName, EFP( '', StorageFilename, false, false ) );
   Result := SL <> nil;
   FreeAndNil( SL );
 end;
@@ -570,20 +571,91 @@ procedure TMGAmazonConnection.PutFile(Localfilename, DestStoragefilename: String
 var
   Ar: TArray<Byte>;
   ACL: TAmazonACLType;
-  S: String;
+  P, PartNumber: integer;
+  UploadID, S: String;
+  SrcStream: TFileStream;
+  Buffer: TBytes;
+  LastSize, ThisRead: integer;
+  Part: TAmazonMultipartPart;
+  Parts: TList<TAmazonMultipartPart>;
+
+const
+  BUFSIZE = 10485760; // 10MB, because multiple parts must have >5MB for all but last block
+
 begin
+  if( Not System.SysUtils.FileExists( LocalFilename ) ) then
+    raise Exception.Create( 'File does not exist: ' + LocalFilename );
+
   try
-    FileToArray( LocalFilename, Ar );
+    S := EFP( '', DestStorageFilename, false, false );
     if( fPublicRead ) then
       ACL := amzbaPublicRead
     else
       ACL := amzbaPrivate;
-      S := EFP( '', DestStorageFilename, false, false );
-    fStorageService.UploadObject( fContainerName, S, Ar, fReducedRedundancy, nil, nil, ACL, nil);
-    fFileURL := fServerProtocol + '://'+fServer+'/' + fContainerName + '/' + S;
-  finally
-    SetLength( Ar, 0 );
+
+    // Do a Multi-Part upload
+    UploadID := fStorageService.InitiateMultipartUploadXML( fContainerName, S, nil, nil, ACL, nil );
+    P := Pos( '<UploadId>', UploadID );
+    PartNumber := 1;
+    Parts := TList<TAmazonMultipartPart>.Create;
+    SrcStream := TFileStream.Create( LocalFilename, fmOpenRead or fmShareDenyNone );
+    SetLength( Buffer, BUFSIZE );
+    LastSize := 0;
+
+    try
+      if( P > 0 ) then
+      begin
+        UploadID := Copy( UploadID, P + 10 );
+        P := Pos( '<', UploadID );
+        if( P > 0 ) then
+        begin
+          UploadID := Copy( UploadID, 1, P-1 );
+
+          // Upload in parts
+          repeat
+
+            ThisRead := SrcStream.Read( Buffer, BUFSIZE );
+            if( ThisRead > 0 ) then
+            begin
+              if( LastSize <> ThisRead ) then
+              begin
+                SetLength( Ar, ThisRead );
+                LastSize := ThisRead;
+              end;
+            end;
+            if( ThisRead > 0 ) then
+            begin
+              Move( Buffer[0], Ar[0], ThisRead );
+              if Not fStorageService.UploadPart( fContainerName, S, UploadId, PartNumber, Ar, Part ) then
+              begin
+                fStorageService.AbortMultipartUpload( fContainerName, S, UploadId );
+                RaisePutFileError( DestStoragefilename );
+              end
+              else
+              begin
+                Parts.Add( Part );
+                Inc( PartNumber );
+              end;
+            end;
+          until ThisRead = 0;
+
+          fStorageService.CompleteMultipartUpload( fContainerName, S, UploadID, Parts );
+
+        end;
+
+      end;
+    finally
+      FreeAndNil( Parts );
+      SetLength( Ar, 0 );
+      FreeAndNil( SrcStream );
+    end;
+
+
+  Except on E:Exception do
+    RaisePutFileError( DestStorageFilename );
+
   end;
+
 end;
 
 end.

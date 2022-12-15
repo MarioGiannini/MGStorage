@@ -99,6 +99,8 @@ begin
          begin
             WNetCancelConnection2(PChar( fNetResource ), 0, false);
             ConnRes := WNetAddConnection2(NetResource, pchar(fPassword), pchar(fUsername), 0);
+            if ConnRes = ERROR_SESSION_CREDENTIAL_CONFLICT  then
+               ConnRes := NO_ERROR;
          end;
 
          if( ConnRes <> NO_ERROR ) then

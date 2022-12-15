@@ -58,7 +58,6 @@ type
 
 
 
-
     { Protected declarations }
     property ConnectionPoints: TConnectionPoints read FConnectionPoints
       implements IConnectionPointContainer;
@@ -215,6 +214,7 @@ begin
   Result := fStorageService.IsFile( Index );
 
 end;
+
 
 function TConnection.GetFolder: WideString;
 begin

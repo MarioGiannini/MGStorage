@@ -95,10 +95,14 @@ uses
     function ParseDate( Str: String ) : TDateTime;
     function ExtractCloudName( aPath: String ) : String;
     function ExtractCloudPath( aPath: String ) : String;
+    function ExtractCloudPathRoot( aPath: String ) : String;
+    function ExtractCloudPathParent( aPath: String ) : String;
     function ExtractCloudFolder( aPath: String ) : String;
     function IncludeTrailing( aPath: String ) : String;
     function CountCloudDepth( aPath: String ) : integer;
     procedure AddItem( aRelPath, aMask, aFullPath: String; aSize: int64; aDate: TDateTime );
+    procedure ForceDirectories( Path: String );
+    function LocalFileSize( LocalFile: String ) : int64;
 
   public
     constructor Create( ConnectionString: String );
@@ -209,6 +213,16 @@ begin
   Result := ( Folder = '/' ) or (Folder = '//') or (Folder = '' );
 end;
 
+function TMGStorageService.LocalFileSize(LocalFile: String): int64;
+var
+   info: TWin32FileAttributeData;
+begin
+   if GetFileAttributesEx(PWideChar(LocalFile), GetFileExInfoStandard, @info) then
+      result := Int64(info.nFileSizeLow) or Int64(info.nFileSizeHigh shl 32)
+   else
+      Result := -1;
+end;
+
 function TMGStorageService.ContainerExists(ContainerName: String): Boolean;
 begin
   Result := false;
@@ -311,6 +325,35 @@ begin
 end;
 
 
+function TMGStorageService.ExtractCloudPathParent(aPath: String): String;
+var
+  P: integer;
+begin
+  Result := '';
+  if( aPath <> '' ) and  ( aPath[1]='/' ) then
+    aPath := Copy( aPath, 2 );
+  P := Pos( '/', aPath );
+  while( P > 0 ) do
+  begin
+    Result := Copy( aPath, 1, P-1 );
+    aPath := Copy( aPath, P+1 );
+    P := Pos( '/', aPath );
+  end;
+end;
+
+function TMGStorageService.ExtractCloudPathRoot(aPath: String): String;
+var
+  P: integer;
+begin
+  if( aPath <> '' ) and  ( aPath[1]='/' ) then
+    aPath := Copy( aPath, 2 );
+  P := Pos( '/', aPath );
+  if( P > 0 ) then
+    Result := Copy( aPath, 1, P-1 )
+  else
+    Result := '';
+end;
+
 function TMGStorageService.GetFileCount: integer;
 begin
   Result := fItemList.Count;
@@ -334,6 +377,12 @@ begin
     end;
   end;
   FreeAndNil( Stream );
+end;
+
+procedure TMGStorageService.ForceDirectories(Path: String);
+begin
+  if( Path <> '' ) then
+    System.SysUtils.ForceDirectories( Path );
 end;
 
 function TMGStorageService.GetConnectionString: String;
@@ -443,23 +492,8 @@ begin
 end;
 
 function TMGStorageService.FileMatches(Filename, Mask: String): boolean;
-var
-  RegEx: TRegEx;
-  ro: TRegExOptions;
 begin
-  Mask := StringReplace( Mask, '.', '[.]', [rfReplaceAll] );
-  Mask := StringReplace( Mask, '[', '[[]', [rfReplaceAll] );
-  Mask := StringReplace( Mask, ']', '[]]', [rfReplaceAll] );
-  Mask := StringReplace( Mask, '\', '\\', [rfReplaceAll] );
-  Mask := StringReplace( Mask, '/', '\/', [rfReplaceAll] );
-  Mask := StringReplace( Mask, '*', '.*', [rfReplaceAll] );
-  Mask := StringReplace( Mask, '?', '.?', [rfReplaceAll] );
-  if( fCaseSensitive ) then
-    ro := [roNone]
-  else
-    ro := [roIgnoreCase];
-  RegEx := TRegEx.Create( Mask, ro );
-  Result := RegEx.IsMatch( Filename );
+  Result := MatchesMask( Filename, Mask );
 end;
 
 class function TMGStorageService.MGCreateStorageService(
@@ -467,7 +501,7 @@ class function TMGStorageService.MGCreateStorageService(
 var
   SL: TStringList;
 begin
-  Result := nil;
+
   SL := TStringList.Create;
   try
     ParseSemi( ConnectionString, SL );
@@ -702,6 +736,7 @@ begin
   end;
   Result := nil;
 end;
+
 
 function TMGListItems.GetItemValue(Index: Integer): TMGListItem;
 begin

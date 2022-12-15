@@ -70,10 +70,10 @@
         <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <VerInfo_Release>1</VerInfo_Release>
+        <VerInfo_Release>2</VerInfo_Release>
         <Manifest_File>None</Manifest_File>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=;FileVersion=1.0.1.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileVersion=1.0.2.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <Debugger_HostApplication>D:\Users\Mario\My Documents\MGStorage\Tester\MGStorageTester.exe</Debugger_HostApplication>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
@@ -84,11 +84,11 @@
         <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_Build>9</VerInfo_Build>
-        <VerInfo_Release>1</VerInfo_Release>
+        <VerInfo_Build>13</VerInfo_Build>
+        <VerInfo_Release>2</VerInfo_Release>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <Debugger_HostApplication>S:\G\Misc Programs (All Source)\WGBookImportUtility\WGBookImportUtility.exe</Debugger_HostApplication>
-        <VerInfo_Keys>CompanyName=Mario Giannini;FileDescription=Cloud Storage COM Interface from www.mariogiannini.com;FileVersion=1.0.1.9;InternalName=MGStorage;LegalCopyright=Copyright Mario Giannini;LegalTrademarks=;OriginalFilename=;ProductName=MGStorage;ProductVersion=1.0.1;Comments=www.mariogiannini.com;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
+        <Debugger_HostApplication>D:\Users\Mario\My Documents\MGStorage\Tester\MGStorageTester.exe</Debugger_HostApplication>
+        <VerInfo_Keys>CompanyName=Mario Giannini;FileDescription=Cloud Storage COM Interface from www.mariogiannini.com;FileVersion=1.0.2.13;InternalName=MGStorage;LegalCopyright=Copyright Mario Giannini;LegalTrademarks=;OriginalFilename=;ProductName=MGStorage;ProductVersion=1.0.1;Comments=www.mariogiannini.com;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
         <Manifest_File>None</Manifest_File>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
     </PropertyGroup>
@@ -127,8 +127,9 @@
                     <Source Name="MainSource">MGStorage.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k230.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp230.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k260.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp260.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\Package1.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\Package1.bpl not found</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
