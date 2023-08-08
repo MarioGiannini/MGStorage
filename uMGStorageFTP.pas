@@ -4,15 +4,16 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Masks, Vcl.Forms,
-  System.IOUtils, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
-  IdExplicitTLSClientServerBase, IdFTP, IdFTPList,
+  System.IOUtils, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdSSL, IdSSLOpenSSL,
+  IdExplicitTLSClientServerBase, IdFTP, IdFTPCommon, IdFTPList,
   uMGStorage;
-
+// Note: IdSSLOpenSSL will require DLLs installed for OpenSSL and the VC++ runtime distribution
   type
 
  TMGFTPConnection = class(TMGStorageService)
       fConnFTP: TIdFTP;
   protected
+    fAllowLeading: Boolean;
     procedure PropertiesChanged; override;
     procedure GetFilesEx(Path, Mask: String; List: TStringList; Recurse: Boolean);
     procedure FTPForceDirectories( Path: String );
@@ -40,13 +41,21 @@ implementation
 function TMGFTPConnection.CalcFileURL(StorageFilename: String): String;
 begin
   AssertConnected;
-  Result := 'ftp://' + fServer + EFP( '', StorageFilename, false, false  );
+  Result := 'ftp://' + fServer + EFP( '', StorageFilename, false, fAllowLeading  );
 end;
 
 procedure TMGFTPConnection.Connect;
 begin
-  fConnFTP.Connect;
-  fConnected := true;
+  try
+    fConnFTP.Connect;
+    fConnected := true;
+  Except on E:Exception do
+  begin
+     fError := E.Message;
+     raise;
+  end;
+
+  end;
 end;
 
 procedure TMGFTPConnection.CopyFile(StorageFilenameOld,
@@ -58,8 +67,8 @@ begin
   // There is no copy in FTP.  It's a get and a put.  User be warned
   TmpLocal := System.IOUtils.TPath.GetTempFileName;
   try
-    GetFile( EFP( '', StorageFilenameOld ), TmpLocal );
-    PutFile( TmpLocal, EFP( '', StorageFilenameNew ) );
+    GetFile( EFP( '', StorageFilenameOld, false, fAllowLeading ), TmpLocal );
+    PutFile( TmpLocal, EFP( '', StorageFilenameNew, false, fAllowLeading ) );
     System.SysUtils.DeleteFile( TmpLocal );
   except on E:Exception do
     begin
@@ -71,6 +80,7 @@ end;
 
 constructor TMGFTPConnection.Create( ConnectionString: String);
 begin
+  fAllowLeading := true;
   fConnFTP := TIdFTP.Create( nil );
   inherited;
 end;
@@ -111,7 +121,7 @@ begin
   AssertConnected;
   if IsRootFolder(Folder) then
     RaiseDeleteFolderRootError;
-  Folder := EFP( '', Folder, false, false );
+  Folder := EFP( '', Folder, false, fAllowLeading );
   if( Not Recursive ) then
     fConnFTP.RemoveDir( Folder )
   else
@@ -151,7 +161,7 @@ procedure TMGFTPConnection.GetFile(Storagefilename,
 begin
   AssertConnected;
   try
-    fConnFTP.Get( EFP( '', Storagefilename ), DestLocalFilename, true, false ) ;
+    fConnFTP.Get( EFP( '', Storagefilename, false, fAllowLeading ), DestLocalFilename, true ) ;
   except on E:Exception do
     RaiseGetFileError( Storagefilename, DestLocalFilename );
   end;
@@ -173,7 +183,7 @@ begin
     begin
       try
         fTmpSL.Clear;
-        fConnFTP.List( fTmpSL ,  EFP( '', StorageFilename, false, false ), false);
+        fConnFTP.List( fTmpSL ,  EFP( '', StorageFilename, false, fAllowLeading ), false);
       except // Do nothing, so SL.Count will be zero
       end;
       Result := fTmpSL.Count > 0;
@@ -216,7 +226,7 @@ function TMGFTPConnection.GetFileList(Path, Mask: String; IncSubfolders: Boolean
 begin
   AssertConnected;
   fItemList.Clear;
-  Path := EFP( '', Path, true, false );
+  Path := EFP( '', Path, true, fAllowLeading );
   if( Path = '/' ) then
     Path := '';
   GetFilesEx( Path, Mask, nil, IncSubFolders );
@@ -281,7 +291,6 @@ begin
       end;
     end;
 
-
   finally
     SL.Free;
   end;
@@ -289,13 +298,47 @@ begin
 end;
 
 procedure TMGFTPConnection.PropertiesChanged;
+var
+  sslHandler: TIdSSLIOHandlerSocketOpenSSL;
 begin
   if( fConnFTP.Connected ) then
     fConnFTP.Disconnect;
+  fAllowLeading :=  Not SameText(fProperties.Values['AllowLeading'],'no');
   fConnFTP.Username := fProperties.Values['Username'];
   fConnFTP.Password := fProperties.Values['Password'];
+  fConnFTP.Port := StrToIntDef( fProperties.Values['Port'], 21 );
   fConnFTP.HOST := fProperties.Values['Server'];
+  fConnFTP.Passive := Not SameText(fProperties.Values['Passive'],'no');
+  if( SameText(fProperties.Values['TransferMode'],'ASCII') ) then
+    fConnFTP.TransferType := ftASCII
+  else
+    fConnFTP.TransferType := ftBinary;
   fCaseSensitive := SameText(fProperties.Values['CaseSensitive'],'yes');
+  if SameText( fProperties.Values['tls'], 'NoTLSSupport' ) then
+    fConnFTP.UseTLS := utNoTLSSupport
+  else
+  begin
+    sslHandler := TIdSSLIOHandlerSocketOpenSSL.Create;
+    if SameText( fProperties.Values['ssllevel'], 'SSLv2' ) then
+      sslHandler.SSLOptions.Method:=sslvSSLv2
+    else if SameText( fProperties.Values['ssllevel'], 'SSLv23' ) then
+      sslHandler.SSLOptions.Method:=sslvSSLv23
+    else if SameText( fProperties.Values['ssllevel'], 'SSLv3' ) then
+      sslHandler.SSLOptions.Method:=sslvSSLv3
+    else if SameText( fProperties.Values['ssllevel'], 'TLSv1' ) then
+      sslHandler.SSLOptions.Method:=sslvTLSv1
+    else if SameText( fProperties.Values['ssllevel'], 'sslvTLSv1_1' ) then
+      sslHandler.SSLOptions.Method:=sslvTLSv1_1
+    else
+      sslHandler.SSLOptions.Method:=sslvTLSv1_2;
+    fConnFTP.IOHandler := sslHandler;
+    if SameText( fProperties.Values['usetls'], 'ImplicitTLS' ) then
+      fConnFTP.UseTLS := utUseImplicitTLS
+    else if SameText( fProperties.Values['usetls'], 'RequireTLS' ) then
+      fConnFTP.UseTLS := utUseRequireTLS
+    else //if SameText( fProperties.Values['usetls'], 'ExplicitTLS' ) then
+      fConnFTP.UseTLS := utUseExplicitTLS;
+  end;
 end;
 
 procedure TMGFTPConnection.RenameFile(StorageFilenameOld,
@@ -303,7 +346,7 @@ procedure TMGFTPConnection.RenameFile(StorageFilenameOld,
 begin
   AssertConnected;
   try
-    fConnFTP.Rename( EFP('', StorageFilenameOld ),  EFP('', StorageFilenameNew ) );
+    fConnFTP.Rename( EFP('', StorageFilenameOld, false, fAllowLeading ),  EFP('', StorageFilenameNew, false, fAllowLeading ) );
   except on E:Exception do
     RaiseRenameError( StorageFilenameOld, StorageFilenameNew );
   end;
@@ -314,7 +357,7 @@ begin
   AssertConnected;
   AssertLocal( Localfilename );
   try
-    DestStorageFilename := EFP( '', DestStorageFilename, false, false );
+    DestStorageFilename := EFP( '', DestStorageFilename, false, fAllowLeading );
     FTPForceDirectories( DestStorageFilename );
     fConnFTP.Put( LocalFilename, DestStorageFilename ) ;
   except on E:Exception do

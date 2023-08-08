@@ -48,7 +48,7 @@ begin
   Result :=  fConnAzure.AccountName + '.blob.core.windows.net/'+fContainername + EFP('', StorageFilename, false, true );
 end;
 
-{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4)
+{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4), 35=Alexandria(11)
 procedure TMGAzureConnection.Connect;
 var
   S: String;
@@ -128,7 +128,7 @@ begin
   end;
 end;
 
-{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4)
+{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4), 35=Alexandria(11)
 procedure TMGAzureConnection.CopyFile(StorageFilenameOld,
   StorageFilenameNew: String);
 var
@@ -154,15 +154,10 @@ begin
   MetaData := TArray<TPair<string, string>>.Create();
   StorageFilenameOld := EFP('',StorageFilenameOld, false, false );
   StorageFilenameNew := EFP('',StorageFilenameNew, false, false );
-  try
-    if not fBlobService.CopyBlob( fContainerName, StorageFilenameNew, fContainerName, StorageFilenameOld,
+  if not fBlobService.CopyBlob( fContainerName, StorageFilenameNew,
+    fContainerName, StorageFilenameOld,
         '', Conditional,  Metadata,  nil ) then
-      RaiseCopyError( StorageFilenameOld, StorageFilenameNew );
-  finally
-    FreeAndNil( Conditional );
-    FreeAndNil( MetaData );
-  end;
-
+    RaiseCopyError( StorageFilenameOld, StorageFilenameNew );
 end;
 {$endif}
 
@@ -174,7 +169,7 @@ begin
   inherited;
   fSupportsContainers := true;
 end;
-{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4)
+{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4), 35=Alexandria(11)
 procedure TMGAzureConnection.CreateContainer(ContainerName: String);
 begin
   AssertConnected;
@@ -212,7 +207,7 @@ begin
   end;
 end;
 
-{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4)
+{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4), 35=Alexandria(11)
 procedure TMGAzureConnection.DeleteFolder(Folder: String; Recursive: Boolean);
 var
   BlobList: TList<TAzureBlob>;
@@ -296,7 +291,7 @@ begin
   inherited;
 end;
 
-{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4)
+{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4), 35=Alexandria(11)
 function TMGAzureConnection.FileExists(StorageFilename: String): boolean;
 var
   SL: TStrings;
@@ -395,7 +390,7 @@ begin
 end;
 {$endif}
 
-{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4)
+{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4), 35=Alexandria(11)
 function TMGAzureConnection.GetFileList(Path, Mask: String; IncSubfolders: Boolean): integer;
 var
   BlobList: TList<TAzureBlob>;
@@ -656,7 +651,7 @@ begin
         BlockNumStr := Format('%.9d', [BlockNum] );
         BlockId := Base64.Encode( BlockNumStr );
         //If Not fBlobService.PutBlock( fContainerName, BlobName, BlockId, Ar ) then
-{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4)
+{$if CompilerVersion = 30 } // 30 = Seattle(10.0), 31=Berlin (10.1), 32=Tokyo(10.2), 33=Rio(10.3), 34=Sydney(10.4), 35=Alexandria(11)
         If Not fBlobService.PutBlock( fContainerName, BlobName, BlockId, Ar,
           '',  '', nil ) then
 {$else}

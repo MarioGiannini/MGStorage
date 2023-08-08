@@ -116,7 +116,7 @@ uses
     procedure SetProperty( Propertyname, Value: String );
     function GetFileURL: String;
     procedure AssertLocal( Localfilename: String );
-    function EFP( Base, Path: String; Delimit: Boolean = false; Leading: Boolean=true ) : String; // Evaluate Full path
+    function EFP( Base, Path: String; Delimit: Boolean = false; AllowLeading: Boolean=true ) : String; // Evaluate Full path
 
     procedure SetConnectionString( ConnectionString: String ); virtual;
     procedure Connect; virtual; Abstract;
@@ -266,7 +266,7 @@ begin
   FreeAndNil( fContainers );
 end;
 
-function TMGStorageService.EFP(Base, Path: String; Delimit: Boolean; Leading: Boolean ): String;
+function TMGStorageService.EFP(Base, Path: String; Delimit: Boolean; AllowLeading: Boolean ): String;
 begin
   Path := StringReplace( Path, '\', '/', [rfReplaceAll] );
   if( Path <> '' ) and (Path[1]='/') then
@@ -278,7 +278,7 @@ begin
   while( Pos( '//', Result ) > 0 ) do
     Result := StringReplace( Result, '//', '/', [rfReplaceAll] );
   Result := StringReplace( Result, '\', '/', [rfReplaceAll] );
-  if( Leading = false ) and (Result <> '' ) and (Result[1]='/' ) then
+  if( AllowLeading = false ) and (Result <> '' ) and (Result[1]='/' ) then
     Result := Copy( Result, 2 );
   if( Delimit = false ) and (Result <> '' ) and (Result[Length(Result)]='/' ) then
     Result := Copy( Result, 1, Length( Result )-1 );
