@@ -313,7 +313,7 @@ begin
     fConnFTP.TransferType := ftASCII
   else
     fConnFTP.TransferType := ftBinary;
-  fCaseSensitive := SameText(fProperties.Values['CaseSensitive'],'yes');
+  fCaseSensitive := (fProperties.Values['CaseSensitive']='') or SameText(fProperties.Values['CaseSensitive'],'yes');
   if SameText( fProperties.Values['tls'], 'NoTLSSupport' ) then
     fConnFTP.UseTLS := utNoTLSSupport
   else
