@@ -170,35 +170,115 @@ Copies file on backend from *StorageFilenameOld* to *StorageFilenameNew*.
 
 Creates a new container on the back end named *ContainerName*.
 
+**procedure DeleteFile( Storagefilename: String ); virtual; abstract;**
 
-DeleteFile
-DeleteFolder
-FileExists
-GetContainerCount
-GetContainerList
-GetContainerName
-GetFile
-GetFileCount
-GetFileDate
-GetFileFullPath
-GetFileList
-GetFileName
-GetFileSize
-GetFolder
-GetPath
-GetProperty
-IsFile
-PutFile
-RenameFile
-SelectContainer
-SetFolder
-SetProperty
+Deletes the object named *Storagefilename* from the back end.
+
+
+**procedure DeleteFolder( Folder: String; Recursive: Boolean );**
+
+Deletes the folder named *Folder* from the back end.  Will not delete the folder if it isn't empty, unless *Recursive* is true.
+
+**function FileExists( StorageFilename: String ): boolean;**
+
+Returns true if *StoreageFilename* exists in the back end.
+
+
+**GetContainerCount: integer;**
+
+Returns the count of containers found on the back end.
+
+**GetContainerList: integer;**
+
+Populates an internal list of container names, and returns the count of containers found.
+
+**GetContainerName( Index: integer ): String;**
+
+Returns a the container name from the internal list of containers as a string (after calling GetContainerList).
+
+**GetFile( Storagefilename, DestLocalFilename: String );**
+
+Retrieves a file from the back end named *StorageFilename* and stores it locally in a file named *DestLocalFilename*.
+
+
+**GetFileCount: integer;**
+
+Retrieves the count of files in the internal file list, as retreived by calling *GetFileList*.
+
+
+**GetFileDate( Index: Integer ): TDateTime;**
+
+Returns the date of the file at position *Index* in the internal file list, as retreived by calling *GetFileList*.
+
+**GetFileFullPath( Index: Integer ): String;**
+
+Returns the full back end path of the file at position *Index* in the internal file list, as retreived by calling *GetFileList*.
+
+**GetFileList( Path, Mask: String; IncSubfolders: Boolean  ): integer;**
+
+Populates an internal file list with items from the back end.  *Path* indicates the folder path, while *Mask* indicates wild cards (asterisks) for matching files.  Set the *IncSubFolders* paramter to truie to include sub folders.
+
+**GetFileName( Index: Integer ): String;**
+
+Returns the base filename of the file at position *Index* in the internal file list, as retreived by calling *GetFileList*.
+
+
+**GetFileSize( Index: Integer ): integer;**
+
+Returns the file size of the file at position *Index* in the internal file list, as retreived by calling *GetFileList*.
+
+**GetFolder: String;**
+
+Retrieves the current folder on the back end.
+
+**GetPath(CloudName: String): string;**
+
+Returns the full cloud path for an object named *CloudName* from the back end.
+
+**GetProperty( Propertyname: String ) : String;**
+
+Retrieves the value is a specific property attribute.  These are normally set in the *ConnectionString* property but can be accessed individually.
+
+
+**IsFile( Index: Integer ): Boolean;**
+
+Returns true if the element *Index* from the internal file list (from *GetFileList*) is a file, or false if it's a folder.
+
+**PutFile( Localfilename, DestStorageFilename: String );**
+
+Uploads a local file named *Localfilename* to the back end, naming it *DestStorageFilename*.
+
+**RenameFile( StorageFilenameOld, StorageFilenameNew: String );**
+
+Renames the back end file named *StorageFilenameOld* to *StorageFilenameNew*.
+
+
+**SelectContainer( ContainerName: String );**
+
+Selects the back end container  named *ContainerName* as the current container.
+
+**SetFolder( NewFolder: String );**
+
+Sets the current back end folder to *NewFolder*.
+
+**SetProperty( Propertyname, Value: String );**
+
+Sets the value of a specific property attribute.  These are normally set in the *ConnectionString* property but can be accessed individually. 
 
 ### Properties
 
-ConnectionString
-Connected
-SupportsContainers
+**ConnectionString: String;**
 
+Specifies the connection string with the specific back-end provider and it's attributes.
+
+**Connected: Boolean;**
+
+Returns true if currently connected to a back end, false if not.
+
+**SupportsContainers: Boolean;**
+
+Returns true if the back end supports containers/buckets.  This is normally not true for things like the File and FTP providers, and true for S3 and 
+
+---
 Written in Delphi.
 http://www.mariogiannini.com
