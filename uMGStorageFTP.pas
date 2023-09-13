@@ -327,7 +327,7 @@ begin
       sslHandler.SSLOptions.Method:=sslvSSLv3
     else if SameText( fProperties.Values['ssllevel'], 'TLSv1' ) then
       sslHandler.SSLOptions.Method:=sslvTLSv1
-    else if SameText( fProperties.Values['ssllevel'], 'sslvTLSv1_1' ) then
+    else if SameText( fProperties.Values['ssllevel'], 'TLSv1_1' ) then
       sslHandler.SSLOptions.Method:=sslvTLSv1_1
     else
       sslHandler.SSLOptions.Method:=sslvTLSv1_2;
